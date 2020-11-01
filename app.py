@@ -6,6 +6,7 @@ ticker_row = 0
 country_row = 1
 
 app = Flask(__name__)
+Bootsrap(app)
 
 @app.route('/')
 def index():
