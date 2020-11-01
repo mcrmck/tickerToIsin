@@ -1,11 +1,18 @@
 import csv
 from flask import Flask, render_template, request, send_file, send_from_directory
+from werkzeug import secure_filename
 from flask_bootstrap import Bootstrap
+from io import TextIOWrapper
+import os
 
 ticker_row = 0
 country_row = 1
+UPLOAD_FOLDER = 'uploads/'
+
+
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 Bootstrap(app)
 
 @app.route('/')
@@ -14,14 +21,22 @@ def index():
 
 @app.route('/', methods=['POST'])
 def upload_files():
-    infile = request.files['file']
-    with open('input.csv') as infile,open('static/master.csv') as masterfile:
+    file = request.files['file']
+    filename = secure_filename(file.filename)
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+
+
+
+    with open('uploads/' + filename) as infile, open('static/master.csv') as masterfile:
         reader = csv.reader(infile)
         master = csv.reader(masterfile)
         checked = {}
         type =''
         for row in reader:
+            print(row[ticker_row])
             if row[ticker_row] not in checked:
+                print('here')
                 if row[country_row] == '' or row[country_row] == 'Country':
                     country = ''
                 else:
@@ -29,6 +44,7 @@ def upload_files():
                 checked[row[ticker_row]] = ("",country)
 
 
+        print(checked)
         for row in master:
             if row[1] in checked:
                 if checked[row[1]][1] == row[5] or checked[row[1]][1] == '':
@@ -40,7 +56,7 @@ def upload_files():
 
 
 
-    with open('input.csv') as infile,open('converted_isin.csv', 'w') as outfile:
+    with open('uploads/' + filename) as infile,open('converted_isin.csv', 'w') as outfile:
         outfile.truncate()
         reader = csv.reader(infile)
         writer = csv.writer(outfile)
